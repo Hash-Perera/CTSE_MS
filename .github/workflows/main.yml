@@ -112,7 +112,7 @@ on:
 
 env:
   # Setting an environment variable with the value of a configuration variable
-  ECR_BACKEND_IMAGE: ${{ vars.ECR_BACKEND_IMAGE }}
+  ECR_BACKEND_IMAGE: ${{ secrets.ECR_BACKEND_IMAGE }}
   AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
   ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
   ECS_BACKEND_SERVICE: ${{ secrets.ECS_SERVICE }}
