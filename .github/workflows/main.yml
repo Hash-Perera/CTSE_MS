@@ -1,3 +1,44 @@
+# name: Deploy to AWS ECS
+
+# on:
+#   push:
+#     branches: [main]
+
+# jobs:
+#   deploy:
+#     name: Build & Deploy to ECS
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v2
+
+#       - name: Build, Tag & Push Docker Image
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           IMAGE_TAG: latest
+#         run: |
+#           docker build -t $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG .
+#           docker push $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+
+#       - name: Deploy to ECS
+#         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#         with:
+#           service: ${{ secrets.ECS_SERVICE }}
+#           cluster: ${{ secrets.ECS_CLUSTER }}
+#           image: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+
 name: Deploy to AWS ECS
 
 on:
@@ -6,11 +47,10 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy to ECS
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Configure AWS Credentials
@@ -25,16 +65,38 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, Tag & Push Docker Image
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: latest
         run: |
-          docker build -t $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          IMAGE_URI=$ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
 
-      - name: Deploy to ECS
+      - name: Prepare task-definition.json
+        run: |
+          export IMAGE_URI=${{ env.IMAGE_URI }}
+          export MONGO_URI=${{ secrets.MONGO_URI }}
+          export JWT_SECRET=${{ secrets.JWT_SECRET }}
+          export JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+          export EXECUTION_ROLE_ARN=${{ secrets.EXECUTION_ROLE_ARN }}
+          export AWS_REGION=${{ secrets.AWS_REGION }}
+
+          envsubst < task-definition.template.json > task-definition.json
+
+      - name: Render ECS Task Definition
+        id: render-task
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: auth-container
+          image: ${{ env.IMAGE_URI }}
+
+      - name: Deploy ECS Service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
+          task-definition: ${{ steps.render-task.outputs.task-definition }}
           service: ${{ secrets.ECS_SERVICE }}
           cluster: ${{ secrets.ECS_CLUSTER }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
