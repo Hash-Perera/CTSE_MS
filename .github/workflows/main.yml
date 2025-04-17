@@ -2,7 +2,8 @@ name: Build and Deploy AWS to ECS
 
 on:
   push:
-    branches: [main]
+    # branches: [main]
+    branches: [comm]
 
 env:
   AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
