@@ -3,40 +3,75 @@ import User from "../models/user.model.js";
 import generateToken from "../utils/generate-token.util.js";
 import mongoose from "mongoose";
 
+// export const register = async (req, res) => {
+//   const { name, email, password, role } = req.body;
+
+//   // Check if user exists
+//   const existingUser = await User.findOne({ email });
+//   if (existingUser) {
+//     return res.status(400).json({ message: "Email already registered" });
+//   }
+
+//   // Convert role to ObjectId explicitly
+//   const roleId = new mongoose.Types.ObjectId(role);
+
+//   // Hash password
+//   const hashedPassword = await bcrypt.hash(password, 12);
+
+//   // Create user
+//   const newUser = await User.create({
+//     name,
+//     email,
+//     password: hashedPassword,
+//     role: roleId,
+//   });
+
+//   const token = generateToken({ id: newUser._id, role: newUser.role });
+
+//   res.status(201).json({
+//     token,
+//     user: {
+//       id: newUser._id,
+//       name: newUser.name,
+//       email: newUser.email,
+//       role: newUser.role,
+//     },
+//   });
+// };
+
 export const register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  try {
+    const { name, email, password, role } = req.body;
 
-  // Check if user exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ message: "Email already registered" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    const token = generateToken({ id: newUser._id, role: newUser.role });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Register error:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-
-  // Convert role to ObjectId explicitly
-  const roleId = new mongoose.Types.ObjectId(role);
-
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  // Create user
-  const newUser = await User.create({
-    name,
-    email,
-    password: hashedPassword,
-    role: roleId,
-  });
-
-  const token = generateToken({ id: newUser._id, role: newUser.role });
-
-  res.status(201).json({
-    token,
-    user: {
-      id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-    },
-  });
 };
 
 export const login = async (req, res) => {
