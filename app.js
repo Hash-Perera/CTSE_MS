@@ -3,13 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.routes.js";
-import connectDB from "./config/db.js";
 import rateLimit from "express-rate-limit";
 
 const app = express();
-
-// Connect to MongoDB
-connectDB();
 
 // Rate Limiting Middleware
 const limiter = rateLimit({
