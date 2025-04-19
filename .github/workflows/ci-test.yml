@@ -1,0 +1,32 @@
+name: Run Tests on PR or Push
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Create .env.test file
+        run: |
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.test
+          echo "JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}" >> .env.test
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: |
+          node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit
