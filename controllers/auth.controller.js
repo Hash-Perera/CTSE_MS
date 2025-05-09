@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import Role from "../models/role.model.js";
 import generateToken from "../utils/generate-token.util.js";
-import mongoose from "mongoose";
 
 export const register = async (req, res) => {
   try {
