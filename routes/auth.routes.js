@@ -10,6 +10,7 @@ import {
   updateProfile,
   deleteAccount,
   forgotPassword,
+  changePassword,
 } from "../controllers/auth.controller.js";
 
 import { protect } from "../middlewares/auth.middleware.js";
@@ -25,6 +26,7 @@ router.get("/profile", protect, getProfile);
 router.put("/update-profile", protect, updateProfile);
 router.delete("/delete-account", protect, deleteAccount);
 router.post("/forgot-password", forgotPassword);
+router.post("/change-password", protect, changePassword);
 
 router.get("/users", protect, hasPermission("user:manage"), getAllUsers);
 router.delete("/users/:id", protect, hasPermission("user:manage"), deleteUser);
