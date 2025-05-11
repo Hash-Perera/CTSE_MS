@@ -19,6 +19,8 @@ import { hasPermission } from "../middlewares/permission.middleware.js";
 
 const router = express.Router();
 
+// Auth routes
+// Public routes
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.get("/profile", protect, getProfile);
@@ -26,6 +28,8 @@ router.put("/update-profile", protect, updateProfile);
 router.delete("/delete-account", protect, deleteAccount);
 router.post("/forgot-password", forgotPassword);
 
+// Admin routes
+// These routes are protected and require authentication and authorization
 router.get("/users", protect, hasPermission("user:manage"), getAllUsers);
 router.delete("/users/:id", protect, hasPermission("user:manage"), deleteUser);
 router.get("/roles", protect, hasPermission("role:read"), getAllRoles);
