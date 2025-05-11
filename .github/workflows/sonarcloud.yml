@@ -1,4 +1,4 @@
-name: SonarCloud
+name: SonarCloud #Script to run SonarCloud analysis on PR or push to develop branch
 on:
   push:
     branches:
